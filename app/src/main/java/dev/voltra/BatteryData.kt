@@ -78,7 +78,7 @@ class BatteryRepository(context: Context) {
         ChargeAlert.onReading(app, reading)
         TemperatureAlert.onReading(app, reading)
         LowBatteryAlert.onReading(app, reading)
-        BatteryWidget.update(app, reading)
+        BatteryWidget.update(app, reading) { BatteryMath.health(Sessions.capacity(Sessions.group(history.observations())), designCapacity) }
         return reading
     }
     @Synchronized fun snapshot(): BatterySnapshot {
