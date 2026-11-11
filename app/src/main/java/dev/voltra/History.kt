@@ -124,10 +124,11 @@ object Sessions {
     }
 }
 
-class HistoryStore(context: Context, name: String = "history.db") : SQLiteOpenHelper(context.applicationContext, name, null, 5) {
+class HistoryStore(context: Context, name: String = "history.db") : SQLiteOpenHelper(context.applicationContext, name, null, 6) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE samples (id INTEGER PRIMARY KEY AUTOINCREMENT, time INTEGER NOT NULL, level INTEGER NOT NULL, plugged INTEGER NOT NULL, charging INTEGER NOT NULL, counter INTEGER, temperature REAL, screen_on INTEGER, plug_type INTEGER, current_ua INTEGER, voltage_mv INTEGER)")
         db.execSQL("CREATE INDEX samples_time ON samples(time)")
+        db.execSQL("CREATE TABLE history_settings (key TEXT PRIMARY KEY, value INTEGER NOT NULL)")
     }
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) db.execSQL("ALTER TABLE samples ADD COLUMN screen_on INTEGER")
@@ -142,7 +143,24 @@ class HistoryStore(context: Context, name: String = "history.db") : SQLiteOpenHe
                 db.execSQL("ALTER TABLE samples ADD COLUMN current_ua INTEGER")
                 db.execSQL("ALTER TABLE samples ADD COLUMN voltage_mv INTEGER")
             }
+            if (oldVersion < 6) db.execSQL("CREATE TABLE history_settings (key TEXT PRIMARY KEY, value INTEGER NOT NULL)")
         }
+    }
+    private fun retentionDays(db: SQLiteDatabase): Int = db.rawQuery("SELECT value FROM history_settings WHERE key = 'retention_days'", null).use { cursor ->
+        if (cursor.moveToFirst()) cursor.getInt(0).takeIf { it in RETENTION_OPTIONS } ?: DEFAULT_RETENTION_DAYS else DEFAULT_RETENTION_DAYS
+    }
+    fun retentionDays(): Int = retentionDays(readableDatabase)
+    fun setRetentionDays(days: Int, now: Long = System.currentTimeMillis()) {
+        require(days in RETENTION_OPTIONS)
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            val previous = retentionDays(db)
+            val values = ContentValues().apply { put("key", "retention_days"); put("value", days) }
+            check(db.insertWithOnConflict("history_settings", null, values, SQLiteDatabase.CONFLICT_REPLACE) != -1L)
+            if (days < previous) db.delete("samples", "time < ?", arrayOf((now - days * DAY_MS).toString()))
+            db.setTransactionSuccessful()
+        } finally { db.endTransaction() }
     }
     fun record(r: Reading) {
         if (r.level !in 0..100) return
@@ -166,8 +184,8 @@ class HistoryStore(context: Context, name: String = "history.db") : SQLiteOpenHe
                     r.counter?.let { put("counter", it) }; r.temperature?.let { put("temperature", it) }; r.current?.let { put("current_ua", it) }; r.voltage?.let { put("voltage_mv", it) }
                 }
                 db.insertWithOnConflict("samples", null, values, SQLiteDatabase.CONFLICT_REPLACE)
-                db.delete("samples", "time < ?", arrayOf((r.time - 30L * 24 * 60 * 60_000).toString()))
-                db.execSQL("DELETE FROM samples WHERE time < (SELECT time FROM samples ORDER BY id DESC LIMIT 1 OFFSET 19999)")
+                db.delete("samples", "time < ?", arrayOf((r.time - retentionDays(db) * DAY_MS).toString()))
+                db.execSQL("DELETE FROM samples WHERE id <= (SELECT id FROM samples ORDER BY id DESC LIMIT 1 OFFSET 20000)")
             }
             db.setTransactionSuccessful()
         } finally { db.endTransaction() }
@@ -180,4 +198,9 @@ class HistoryStore(context: Context, name: String = "history.db") : SQLiteOpenHe
         return result
     }
     fun clear() { writableDatabase.delete("samples", null, null) }
+    companion object {
+        const val DEFAULT_RETENTION_DAYS = 30
+        val RETENTION_OPTIONS = listOf(7, 30, 90)
+        private const val DAY_MS = 24 * 60 * 60_000L
+    }
 }

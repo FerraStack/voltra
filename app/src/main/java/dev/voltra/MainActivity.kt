@@ -68,12 +68,21 @@ class MainActivity : ComponentActivity() {
 private fun VoltraApp(repo: BatteryRepository, active: Boolean, context: android.content.Context) {
     var snapshot by remember { mutableStateOf<BatterySnapshot?>(null) }
     val scope = rememberCoroutineScope()
-    fun refresh() { scope.launch { snapshot = withContext(Dispatchers.IO) { repo.snapshot() } } }
+    var snapshotRevision by remember { mutableIntStateOf(0) }
+    var retentionBusy by remember { mutableStateOf(false) }
+    fun refresh() {
+        val revision = snapshotRevision
+        scope.launch {
+            val value = withContext(Dispatchers.IO) { repo.snapshot() }
+            if (revision == snapshotRevision && !retentionBusy) snapshot = value
+        }
+    }
     var design by remember { mutableStateOf(repo.designCapacity.toString().takeUnless { it == "0" } ?: "") }
     var settings by remember { mutableStateOf(false) }
     var selected by remember { mutableIntStateOf(0) }
     var currentMultiplier by remember { mutableIntStateOf(repo.currentMultiplier) }
     var chartDays by remember { mutableIntStateOf(1) }
+    var visibleSessions by remember { mutableIntStateOf(20) }
     var chartMetric by remember { mutableStateOf(ChartMetric.LEVEL) }
     var background by remember { mutableStateOf(BackgroundSampling.enabled(context)) }
     var backgroundScheduled by remember { mutableStateOf(BackgroundSampling.scheduled(context)) }
@@ -99,6 +108,17 @@ private fun VoltraApp(repo: BatteryRepository, active: Boolean, context: android
     var alert by remember { mutableStateOf(ChargeAlert.enabled(context)) }
     var threshold by remember { mutableIntStateOf(ChargeAlert.threshold(context)) }
     var confirmClear by remember { mutableStateOf(false) }
+    var requestedRetention by remember { mutableStateOf<Int?>(null) }
+    fun applyRetention(days: Int) {
+        retentionBusy = true
+        snapshotRevision++
+        scope.launch {
+            val result = withContext(Dispatchers.IO) { runCatching { repo.setRetentionDaysAndSnapshot(days) } }
+            snapshotRevision++
+            result.onSuccess { snapshot = it }.onFailure { Toast.makeText(context, "Не удалось обновить срок хранения", Toast.LENGTH_SHORT).show() }
+            retentionBusy = false
+        }
+    }
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         ChargeAlert.setEnabled(context, granted); alert = granted; notificationsBlocked = !granted
     }
@@ -119,7 +139,9 @@ private fun VoltraApp(repo: BatteryRepository, active: Boolean, context: android
     }
     LaunchedEffect(active) {
         while (active) {
-            snapshot = withContext(Dispatchers.IO) { repo.snapshot() }
+            val revision = snapshotRevision
+            val value = withContext(Dispatchers.IO) { repo.snapshot() }
+            if (revision == snapshotRevision && !retentionBusy) snapshot = value
             monitor = MonitorService.running
             background = BackgroundSampling.enabled(context)
             backgroundScheduled = BackgroundSampling.scheduled(context)
@@ -137,17 +159,33 @@ private fun VoltraApp(repo: BatteryRepository, active: Boolean, context: android
     val estimate = current.estimates
     val observations = current.observations
     val sessions = current.sessions
-    if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false }, title = { Text("Очистить историю?") }, text = { Text("Все измерения и заводская ёмкость будут удалены с устройства.") }, confirmButton = { TextButton(onClick = { repo.clear(); design = ""; refresh(); confirmClear = false; settings = false }) { Text("Удалить") } }, dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Отмена") } })
-    if (settings && !confirmClear) AlertDialog(onDismissRequest = { settings = false }, title = { Text("Настройки батареи") }, text = {
+    requestedRetention?.let { days ->
+        AlertDialog(onDismissRequest = { requestedRetention = null }, title = { Text("Сократить срок хранения?") },
+            text = { Text("Измерения старше $days дней будут удалены без возможности восстановления. Оценка здоровья и прогнозы могут измениться.") },
+            confirmButton = { TextButton(onClick = { requestedRetention = null; applyRetention(days) }) { Text("Удалить старые данные") } },
+            dismissButton = { TextButton(onClick = { requestedRetention = null }) { Text("Отмена") } })
+    }
+    if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false }, title = { Text("Очистить историю?") }, text = { Text("Все измерения и заводская ёмкость будут удалены с устройства.") }, confirmButton = { TextButton(onClick = { snapshotRevision++; repo.clear(); design = ""; refresh(); confirmClear = false; settings = false }) { Text("Удалить") } }, dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Отмена") } })
+    if (settings && !confirmClear && requestedRetention == null) AlertDialog(onDismissRequest = { settings = false }, title = { Text("Настройки батареи") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Укажите заводскую ёмкость из характеристик телефона, чтобы оценить износ. Переключатели применяются сразу; ёмкость — после сохранения.", color = Muted)
             OutlinedTextField(value = design, onValueChange = { if (it.length <= 5 && it.all(Char::isDigit)) design = it }, label = { Text("Заводская ёмкость, мА·ч") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true, isError = design.isNotEmpty() && (design.toIntOrNull() ?: 0) !in 500..50000,
                 supportingText = { if (design.isNotEmpty() && (design.toIntOrNull() ?: 0) !in 500..50000) Text("Введите от 500 до 50 000 мА·ч") })
+            Text("Хранить историю: ${current.retentionDays} дней", fontSize = 14.sp)
+            Text("До 20 000 точек. Увеличение срока не вернёт ранее удалённые данные.", color = Muted, fontSize = 12.sp, lineHeight = 16.sp)
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                HistoryStore.RETENTION_OPTIONS.forEach { days ->
+                    FilterChip(selected = days == current.retentionDays, enabled = !retentionBusy, onClick = {
+                        if (days < current.retentionDays) requestedRetention = days
+                        else if (days != current.retentionDays) applyRetention(days)
+                    }, label = { Text("$days дней") })
+                }
+            }
             Text("Калибровка тока: ×$currentMultiplier", fontSize = 14.sp)
             Text("Меняй только если телефон неверно сообщает единицы тока. Влияет также на оценку мощности.", color = Muted, fontSize = 12.sp, lineHeight = 16.sp)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 listOf(1, 10, 100, 1000).forEach { multiplier ->
-                    FilterChip(selected = multiplier == currentMultiplier, onClick = { currentMultiplier = multiplier; repo.setCurrentMultiplier(multiplier); refresh() }, label = { Text("×$multiplier", fontSize = 11.sp) })
+                    FilterChip(selected = multiplier == currentMultiplier, onClick = { currentMultiplier = multiplier; snapshotRevision++; repo.setCurrentMultiplier(multiplier); refresh() }, label = { Text("×$multiplier", fontSize = 11.sp) })
                 }
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -197,9 +235,9 @@ private fun VoltraApp(repo: BatteryRepository, active: Boolean, context: android
                 }) { Text("Настройки уведомлений") }
             }
             if (scheduleError) Text("Не удалось включить фоновые измерения", color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-            TextButton(onClick = { confirmClear = true }) { Text("Очистить данные") }
+            TextButton(enabled = !retentionBusy, onClick = { confirmClear = true }) { Text("Очистить данные") }
         }
-    }, confirmButton = { TextButton(enabled = design.isEmpty() || (design.toIntOrNull() ?: 0) in 500..50000, onClick = { repo.setDesign(design.toIntOrNull() ?: 0); refresh(); settings = false }) { Text("Сохранить") } }, dismissButton = { TextButton(onClick = { settings = false }) { Text("Закрыть") } })
+    }, confirmButton = { TextButton(enabled = design.isEmpty() || (design.toIntOrNull() ?: 0) in 500..50000, onClick = { snapshotRevision++; repo.setDesign(design.toIntOrNull() ?: 0); refresh(); settings = false }) { Text("Сохранить") } }, dismissButton = { TextButton(onClick = { settings = false }) { Text("Закрыть") } })
     Scaffold(containerColor = Background, bottomBar = {
         NavigationBar(containerColor = Color(0xFF162019), contentColor = White) {
             NavigationBarItem(selected = selected == 0, onClick = { selected = 0 }, icon = { Icon(Icons.Rounded.Bolt, null) }, label = { Text("Обзор") }, colors = NavigationBarItemDefaults.colors(indicatorColor = Color(0xFF354A2C), selectedIconColor = Lime))
@@ -379,8 +417,9 @@ private fun VoltraApp(repo: BatteryRepository, active: Boolean, context: android
                         Text("Средняя скорость по наблюдаемым сессиям; зависит от уровня заряда и нагрузки.", color = Muted, fontSize = 12.sp, lineHeight = 17.sp)
                     }
                 }
-                SectionTitle("Сессии", "До 30 дней")
-                val recent = sessions.filter { it.sampleCount >= 2 }.takeLast(20).reversed()
+                SectionTitle("Сессии", "До ${current.retentionDays} дней")
+                val allSessions = remember(sessions) { sessions.asReversed().filter { it.sampleCount >= 2 } }
+                val recent = allSessions.take(visibleSessions)
                 if (recent.isEmpty()) Note("Здесь появятся зарядки и разряды после нескольких измерений.")
                 recent.forEach { session ->
                     Panel {
@@ -401,8 +440,13 @@ private fun VoltraApp(repo: BatteryRepository, active: Boolean, context: android
                         session.capacityReason?.let { Text("Не включена в здоровье: $it", color = Muted, fontSize = 12.sp) }
                     }
                 }
+                if (recent.size < allSessions.size) {
+                    OutlinedButton(onClick = { visibleSessions += 20 }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Показать ещё · осталось ${allSessions.size - recent.size}")
+                    }
+                }
                 OutlinedButton(onClick = { export.launch("voltra-history.csv") }, modifier = Modifier.fillMaxWidth()) { Text("Экспортировать историю CSV") }
-                Note("История хранит до 30 дней и 20 000 точек. Между точками более 75 минут начинается новая сессия. Фоновый сбор приблизителен: Android может задерживать или пропускать измерения.")
+                Note("История хранит до ${current.retentionDays} дней и 20 000 точек. Между точками более 75 минут начинается новая сессия. Фоновый сбор приблизителен: Android может задерживать или пропускать измерения.")
             }
             Spacer(Modifier.height(8.dp))
         }
