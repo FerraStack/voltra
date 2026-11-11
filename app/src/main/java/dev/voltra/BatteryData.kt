@@ -11,7 +11,7 @@ import kotlin.math.roundToInt
 data class Reading(val level: Int, val charging: Boolean, val full: Boolean, val plugged: Boolean, val screenOn: Boolean, val temperature: Float?, val voltage: Int?, val current: Int?, val averageCurrent: Int?, val energyNwh: Long?, val counter: Int?, val status: String, val source: String, val chargeMinutes: Int?, val cycles: Int?, val technology: String? = null, val plugType: Int = 0, val time: Long = System.currentTimeMillis())
 data class Sample(val level: Int, val counter: Int?, val time: Long)
 data class Estimates(val remainingMinutes: Int? = null, val capacityMah: Int? = null, val healthPercent: Int? = null, val screenOnMinutes: Int? = null, val screenOffMinutes: Int? = null, val chargeSpeed: Double? = null, val dischargeSpeed: Double? = null, val chargeRemaining: Int? = null, val sourceSpeeds: Map<Int, Double> = emptyMap(), val observedScreenOn: Int = 0, val observedScreenOff: Int = 0)
-data class BatterySnapshot(val reading: Reading, val estimates: Estimates, val observations: List<Observation>, val sessions: List<BatterySession>)
+data class BatterySnapshot(val reading: Reading, val estimates: Estimates, val observations: List<Observation>, val sessions: List<BatterySession>, val retentionDays: Int)
 
 object BatteryMath {
     fun scaleCurrent(raw: Int?, multiplier: Int): Int? {
@@ -43,6 +43,10 @@ class BatteryRepository(context: Context) {
     val designCapacity get() = prefs.getInt("design", 0)
     val currentMultiplier get() = prefs.getInt("current_multiplier", 1).takeIf { it in listOf(1, 10, 100, 1000) } ?: 1
     fun setCurrentMultiplier(value: Int) { if (value in listOf(1, 10, 100, 1000)) prefs.edit().putInt("current_multiplier", value).apply() }
+    @Synchronized fun setRetentionDaysAndSnapshot(value: Int): BatterySnapshot {
+        history.setRetentionDays(value)
+        return snapshot()
+    }
     @Synchronized fun setDesign(value: Int) { prefs.edit().putInt("design", value).apply() }
     @Synchronized fun clear() { history.clear(); prefs.edit().remove("design").remove("capacity").remove("rate_milli").apply() }
     @Synchronized fun close() = history.close()
@@ -90,6 +94,6 @@ class BatteryRepository(context: Context) {
             Sessions.screenRemaining(observations, reading.level, reading.plugged, true), Sessions.screenRemaining(observations, reading.level, reading.plugged, false),
             Sessions.averageSpeed(sessions, true), Sessions.averageSpeed(sessions, false), Sessions.chargeRemaining(sessions, reading),
             listOf(1, 2, 4, 8).mapNotNull { type -> Sessions.averageSpeed(sessions, true, type)?.let { type to it } }.toMap(),
-            Sessions.observedScreenMinutes(observations, reading.time, true), Sessions.observedScreenMinutes(observations, reading.time, false)), observations, sessions)
+            Sessions.observedScreenMinutes(observations, reading.time, true), Sessions.observedScreenMinutes(observations, reading.time, false)), observations, sessions, history.retentionDays())
     }
 }
