@@ -1,0 +1,1 @@
+Private, offline battery health, history charts, alerts, and widget.

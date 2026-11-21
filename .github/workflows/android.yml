@@ -1,26 +1,73 @@
 name: Android
+
 on:
   push:
+    branches: ['main']
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Test, lint, and build APKs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+
       - uses: android-actions/setup-android@v3
         with:
-          packages: platform-tools
-      - name: Install Android SDK
-        run: sdkmanager 'platforms;android-36.1'
+          packages: >-
+            platform-tools
+            platforms;android-36.1
+            build-tools;36.0.0
+
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build and test
-        run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:assembleDebugAndroidTest
+
+      - name: Run unit tests, lint, and build debug/release/test APKs
+        run: >-
+          ./gradlew
+          :app:testDebugUnitTest
+          :app:lintDebug
+          :app:assembleDebug
+          :app:assembleDebugAndroidTest
+          :app:assembleRelease
+          -Pvoltra.signReleaseWithDebugKey=true
+          --stacktrace --console=plain
+
+      - name: Verify release smoke APK signature
+        run: >-
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose
+          app/build/outputs/apk/release/app-release.apk
+
+      - name: Summarize APK sizes
+        run: |
+          debug_bytes=$(stat -c '%s' app/build/outputs/apk/debug/app-debug.apk)
+          release_bytes=$(stat -c '%s' app/build/outputs/apk/release/app-release.apk)
+          {
+            echo "### Voltra APK Sizes"
+            echo ""
+            echo "| Artifact | Size |"
+            echo "| --- | ---: |"
+            printf '| `app-debug.apk` | %.2f MB (%d bytes) |\n' "$(awk "BEGIN {print $debug_bytes/1048576}")" "$debug_bytes"
+            printf '| `app-release.apk` (R8 minified) | %.2f MB (%d bytes) |\n' "$(awk "BEGIN {print $release_bytes/1048576}")" "$release_bytes"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - uses: actions/upload-artifact@v4
         with:
           name: voltra-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7

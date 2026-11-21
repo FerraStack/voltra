@@ -1,0 +1,188 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  # For retries: select the existing release tag, not a branch.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Validate release tag
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Require a version tag matching app/build.gradle.kts
+        id: version
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+          from pathlib import Path
+
+          ref = os.environ.get("GITHUB_REF", "")
+          match = re.fullmatch(
+              r"refs/tags/v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)"
+              r"(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?)",
+              ref,
+          )
+          if not match:
+              sys.exit(f"::error::Release requires a tag such as v1.0.0 or v1.0.0-rc.1, not {ref!r}.")
+          version = match[1]
+          build_file = Path("app/build.gradle.kts").read_text(encoding="utf-8")
+          app_version = re.search(r'^\s*versionName\s*=\s*"([^"]+)"', build_file, re.MULTILINE)
+          if app_version is None or app_version[1] != version:
+              found = app_version[1] if app_version else "<missing>"
+              sys.exit(
+                  f"::error::Tag version {version} must match versionName ({found}) in app/build.gradle.kts."
+              )
+          print(f"Release version: {version}")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as stream:
+              stream.write(f"version={version}\n")
+          PY
+
+      - name: Tags must point at a commit on main
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main \
+            || { echo "::error::$GITHUB_REF_NAME is not on main; refusing to release"; exit 1; }
+
+  build:
+    name: Test, lint, and build signed release
+    needs: version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Restore release signing key
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/voltra-release.jks
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in ANDROID_KEYSTORE_BASE64 STORE_PASSWORD KEY_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing release signing secret: ${name}. See docs/RELEASING.md."
+              exit 1
+            fi
+          done
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: >-
+            platform-tools
+            platforms;android-36.1
+            build-tools;36.0.0
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: 'true'
+
+      - name: Run unit tests and lint gate
+        run: ./gradlew :app:testDebugUnitTest :app:lintDebug --stacktrace --console=plain
+
+      - name: Build signed release APK and AAB
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/voltra-release.jks
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        # Keep signing credentials out of Gradle's configuration cache.
+        run: >-
+          ./gradlew :app:assembleRelease :app:bundleRelease
+          --no-configuration-cache --stacktrace --console=plain
+
+      - name: Verify signatures and prepare checksums
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          aab=app/build/outputs/bundle/release/app-release.aab
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
+          jarsigner -verify "$aab"
+          mkdir -p dist
+          cp "$apk" "dist/voltra-${VERSION}.apk"
+          cp "$aab" "dist/voltra-${VERSION}.aab"
+          cd dist
+          sha256sum -- "voltra-${VERSION}.apk" "voltra-${VERSION}.aab" > SHA256SUMS
+
+      - name: Upload R8 mapping file
+        uses: actions/upload-artifact@v4
+        with:
+          name: r8-mapping-${{ needs.version.outputs.version }}-${{ github.run_id }}
+          path: app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Save release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remove signing key
+        if: always()
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/voltra-release.jks
+        run: rm -f -- "$KEYSTORE_PATH"
+
+  publish:
+    name: Publish GitHub Release
+    needs: [version, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist
+
+      - name: Publish APK, app bundle, and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum --check SHA256SUMS
+          # Never overwrite an existing release's binaries on a rerun.
+          args=(--verify-tag --generate-notes --title "Voltra ${TAG}")
+          if [[ "$TAG" == *-* ]]; then
+            args+=(--prerelease --latest=false)
+          fi
+          gh release create "$TAG" "voltra-${VERSION}.apk" "voltra-${VERSION}.aab" SHA256SUMS "${args[@]}"

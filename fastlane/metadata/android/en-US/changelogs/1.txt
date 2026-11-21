@@ -1,0 +1,7 @@
+Voltra v1.0.0:
+• Full English and Russian localization with per-app language support.
+• Cohesive System, Dark, and Light Material 3 themes with edge-to-edge layout and tablet NavigationRail.
+• Dedicated grouped Settings screen and °C / °F temperature unit toggle.
+• Interactive 24h / 7d / 30d charts with axis labels and touch scrubbing.
+• Charging-triggered background sampling, hardened monitoring service, WAL SQLite storage, and dated CSV export.
+• Polished home-screen widget and adaptive launcher icon.

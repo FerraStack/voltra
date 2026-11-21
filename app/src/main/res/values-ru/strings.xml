@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation & screen headers -->
+    <string name="nav_overview">Обзор</string>
+    <string name="nav_history">История</string>
+    <string name="nav_health">Здоровье</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="header_overview">Твоя батарея</string>
+    <string name="header_history">История батареи</string>
+    <string name="header_health">Здоровье батареи</string>
+    <string name="header_settings">Настройки</string>
+    <string name="cd_open_settings">Открыть настройки</string>
+    <string name="cd_dismiss">Скрыть</string>
+
+    <!-- States & domain enums -->
+    <string name="state_charged">Заряжено</string>
+    <string name="state_charging">Зарядка</string>
+    <string name="state_plugged">Подключено</string>
+    <string name="state_on_battery">На батарее</string>
+    <string name="state_discharging">Разряд</string>
+
+    <string name="health_good">Хорошее</string>
+    <string name="health_overheat">Перегрев</string>
+    <string name="health_cold">Переохлаждение</string>
+    <string name="health_dead">Неисправна</string>
+    <string name="health_over_voltage">Повышенное напряжение</string>
+    <string name="health_unspecified_failure">Неисправность</string>
+    <string name="health_unknown">Нет данных</string>
+
+    <string name="source_ac">Сеть</string>
+    <string name="source_usb">USB</string>
+    <string name="source_wireless">Беспроводная</string>
+    <string name="source_dock">Док-станция</string>
+    <string name="source_other_plugged">Подключено</string>
+    <string name="source_battery">От батареи</string>
+    <string name="source_unknown">Источник неизвестен</string>
+
+    <string name="exclusion_no_counter">Нет счётчика заряда</string>
+    <string name="exclusion_insufficient_span" formatted="false">Нужно не менее 10% заряда</string>
+    <string name="exclusion_too_short">Сессия короче 5 минут</string>
+    <string name="exclusion_too_long">Слишком длинная сессия</string>
+    <string name="exclusion_counter_not_increased">Счётчик не вырос</string>
+    <string name="exclusion_out_of_range">Показания вне допустимого диапазона</string>
+
+    <!-- Units & formatters -->
+    <string name="unit_ma">мА</string>
+    <string name="format_temp_c">%.1f °C</string>
+    <string name="format_temp_f">%.1f °F</string>
+    <string name="format_temp_int_c">%1$d °C</string>
+    <string name="format_temp_int_f">%1$d °F</string>
+    <string name="format_voltage">%.2f В</string>
+    <string name="format_power">%.1f Вт</string>
+    <string name="format_energy">%.2f Вт·ч</string>
+    <string name="format_current_zero">0 мА</string>
+    <string name="format_current_small">%+.1f мА</string>
+    <string name="format_current_large">%1$s%2$d мА</string>
+    <string name="format_mah">%1$d мА·ч</string>
+    <string name="format_percent">%1$d%%</string>
+    <string name="format_speed">%.1f%%/ч</string>
+    <string name="format_duration_hm">%1$d ч %2$d мин</string>
+    <string name="format_estimate_over_week">7 дней и более</string>
+
+    <!-- First-run setup card -->
+    <string name="setup_card_title">Настройка Voltra</string>
+    <string name="setup_card_body">Укажите заводскую ёмкость телефона для оценки здоровья батареи и включите фоновые измерения для автоматической истории сессий.</string>
+    <string name="setup_card_action">Открыть настройки</string>
+
+    <!-- Overview screen -->
+    <string name="label_right_now">ПРЯМО СЕЙЧАС</string>
+    <string name="label_charge">ЗАРЯД</string>
+    <string name="cd_charge_gauge">Уровень заряда %1$s, %2$s</string>
+    <string name="label_until_full">ДО ПОЛНОГО ЗАРЯДА</string>
+    <string name="label_estimated_remaining">ПРИМЕРНО ОСТАЛОСЬ</string>
+    <string name="estimate_not_enough_data">Пока недостаточно данных</string>
+    <string name="estimate_source_discharge">По последним измеренным разрядам</string>
+    <string name="estimate_source_android">Оценка Android</string>
+    <string name="estimate_source_linear">По текущей скорости; не учитывает замедление и лимит заряда</string>
+    <string name="estimate_source_android_unavailable">Android ещё не дал оценку</string>
+
+    <string name="section_metrics">Показатели</string>
+    <string name="section_metrics_sub">С устройства</string>
+    <string name="metric_temperature">Температура</string>
+    <string name="metric_temperature_hint">Термодатчик</string>
+    <string name="metric_voltage">Напряжение</string>
+    <string name="metric_voltage_hint">Сейчас</string>
+    <string name="metric_current">Ток</string>
+    <string name="metric_current_hint">Знак устройства</string>
+    <string name="metric_condition">Состояние</string>
+    <string name="metric_condition_hint">По данным Android</string>
+    <string name="metric_power">Мощность</string>
+    <string name="metric_power_hint">На батарее, оценка</string>
+    <string name="metric_source">Источник</string>
+    <string name="metric_source_hint">Тип подключения</string>
+    <string name="metric_avg_current">Средний ток</string>
+    <string name="metric_avg_current_hint">По данным системы</string>
+    <string name="metric_energy">Энергия</string>
+    <string name="metric_energy_hint">Остаток</string>
+    <string name="note_power_and_forecast">Мощность рассчитана по току и напряжению батареи; это не мощность адаптера. Прогноз появится после 10 минут и снижения заряда на 2%% в измеренной сессии и зависит от сценария использования.</string>
+
+    <string name="section_current_session">Текущая сессия</string>
+    <string name="label_since_observed">С НАЧАЛА НАБЛЮДЕНИЯ</string>
+    <string name="session_started_meta">Начало: %1$s · %2$d измер.</string>
+
+    <string name="label_data_collection">СБОР ДАННЫХ</string>
+    <string name="collection_continuous">Непрерывный мониторинг</string>
+    <string name="collection_background">Фоновые измерения</string>
+    <string name="collection_foreground_only">При открытом приложении</string>
+    <string name="collection_last_sample">Последняя точка: %1$s</string>
+    <string name="collection_no_samples">Измерений пока нет</string>
+    <string name="action_configure">Настроить</string>
+
+    <string name="section_screen_forecast">Прогноз по экрану</string>
+    <string name="section_approx">Примерно</string>
+    <string name="metric_screen_on">Экран включён</string>
+    <string name="metric_screen_off">Экран выключен</string>
+    <string name="metric_from_samples">По замерам</string>
+    <string name="note_screen_interactivity">Используется интерактивность устройства по Android. Между замерами экран мог переключаться, а данные — отличаться от фактического состояния дисплея.</string>
+
+    <!-- Health screen -->
+    <string name="label_capacity_estimate">ОЦЕНКА ЁМКОСТИ</string>
+    <string name="health_of_design_capacity">от заводской ёмкости</string>
+    <string name="health_summary_detail">Подходящих зарядок: %1$d. Взвешенная медиана по диапазону заряда для последних 10 сессий. Оценка по счётчику заряда может отличаться от реальной ёмкости.</string>
+    <string name="health_over_100_warning">Оценка выше 100%%: проверьте заводскую ёмкость и повторите измерение.</string>
+    <string name="metric_cycles">Циклы</string>
+    <string name="metric_wear">Потеря</string>
+    <string name="metric_approximate">Приблизительно</string>
+    <string name="charge_counter_line">Счётчик заряда: %1$s</string>
+    <string name="charge_counter_unsupported">не поддерживается</string>
+    <string name="section_details">Детали</string>
+    <string name="section_estimate">Оценка</string>
+    <string name="metric_measured">Измерено</string>
+    <string name="metric_capacity_hint">Ёмкость</string>
+    <string name="metric_design">Заводская</string>
+    <string name="metric_from_settings">Из настроек</string>
+    <string name="label_capacity_history">ИСТОРИЯ ЁМКОСТИ</string>
+    <string name="capacity_chart_empty">График появится после двух подходящих зарядок.</string>
+    <string name="capacity_chart_range">Диапазон: %1$d–%2$d мА·ч · %3$d измер.</string>
+    <string name="cd_capacity_chart">История оценок ёмкости по %1$d сессиям, последнее значение %2$d мА·ч</string>
+    <string name="health_howto_title">Как получить оценку</string>
+    <string name="health_howto_body">1. Укажите заводскую ёмкость в настройках.\n\n2. Зарядите телефон минимум на 10%% за 5 минут или дольше, пока Voltra собирает измерения.\n\n3. Если телефон поддерживает счётчик заряда, здесь появится оценка.</string>
+    <string name="action_set_design_capacity">Указать ёмкость →</string>
+    <string name="section_device">Устройство</string>
+    <string name="detail_model">Модель</string>
+    <string name="detail_android_version">Версия Android</string>
+    <string name="detail_chemistry">Химия батареи</string>
+    <string name="detail_system_status">Статус батареи Android</string>
+    <string name="note_health_caveat">Состояние Android и процент остаточной ёмкости — разные показатели. Фоновые измерения можно включить в настройках.</string>
+
+    <!-- History screen & chart -->
+    <string name="chart_title_level">ЗАРЯД</string>
+    <string name="chart_label_level">Заряд</string>
+    <string name="chart_title_temp">ТЕМПЕРАТУРА</string>
+    <string name="chart_label_temp">Темп.</string>
+    <string name="chart_title_current">ТОК</string>
+    <string name="chart_label_current">Ток</string>
+    <string name="chart_title_voltage">НАПРЯЖЕНИЕ</string>
+    <string name="chart_label_voltage">Вольтаж</string>
+    <string name="range_24h">24 ч</string>
+    <string name="range_7d">7 дн</string>
+    <string name="range_30d">30 дн</string>
+    <string name="chart_empty">График появится после нескольких измерений.</string>
+    <string name="chart_scale_meta">Шкала %1$s–%2$s · последнее: %3$s</string>
+    <string name="chart_scrub_hint">Коснитесь графика, чтобы посмотреть точку</string>
+    <string name="chart_current_calibration_note">Сохранён с калибровкой, действовавшей в момент замера.</string>
+    <string name="cd_history_chart">%1$s за %2$d дн., диапазон от %3$s до %4$s, последнее %5$s</string>
+
+    <string name="section_speed">Скорость</string>
+    <string name="section_speed_sub">По сохранённым сессиям</string>
+    <string name="metric_avg_hint">В среднем</string>
+    <string name="section_screen_24h">Экран</string>
+    <string name="section_screen_24h_sub">Наблюдалось за 24 часа</string>
+    <string name="screen_on_short">Включён</string>
+    <string name="screen_off_short">Выключен</string>
+    <string name="note_observed_screen_24h">Интерактивность по Android учитывается только на границах интервалов. Переключения и пробелы между замерами могут влиять на итог.</string>
+    <string name="section_by_source">По источникам</string>
+    <string name="note_source_speeds">Средняя скорость по наблюдаемым сессиям; зависит от уровня заряда и нагрузки.</string>
+    <string name="section_sessions">Сессии</string>
+    <string name="section_sessions_sub">До %1$d дней</string>
+    <string name="sessions_empty">Здесь появятся зарядки и разряды после нескольких измерений.</string>
+    <string name="session_meta_line">%1$s · %2$s · %3$d измер.</string>
+    <string name="session_counter_delta">Δ счётчика %1$s%2$d мА·ч</string>
+    <string name="session_peak_temp">макс. %1$s</string>
+    <string name="session_capacity_est">Оценка ёмкости: %1$d мА·ч</string>
+    <string name="session_capacity_excluded">Не включена в здоровье: %1$s</string>
+    <string name="action_show_more_sessions">Показать ещё · осталось %1$d</string>
+    <string name="action_export_csv">Экспортировать историю CSV</string>
+    <string name="note_history_retention">История хранит до %1$d дней и 20 000 точек. Промежуток более 75 минут начинает новую сессию. Фоновый сбор приблизителен: Android может задерживать или пропускать измерения.</string>
+
+    <!-- Settings screen -->
+    <string name="settings_group_battery">Батарея и калибровка</string>
+    <string name="settings_design_label">Заводская ёмкость, мА·ч</string>
+    <string name="settings_design_helper">Укажите заводскую ёмкость из характеристик телефона (500–50 000 мА·ч), чтобы оценить остаточное здоровье.</string>
+    <string name="settings_design_error">Введите от 500 до 50 000 мА·ч</string>
+    <string name="action_save">Сохранить</string>
+    <string name="settings_multiplier_title">Калибровка тока: ×%1$d</string>
+    <string name="settings_multiplier_desc">Меняйте только если телефон неверно сообщает единицы тока. Влияет также на расчёт мощности.</string>
+
+    <string name="settings_group_monitoring">Мониторинг</string>
+    <string name="settings_continuous_title">Непрерывный мониторинг</string>
+    <string name="settings_continuous_desc">Измерения примерно каждые 30 секунд, постоянное уведомление и дополнительный расход батареи. В спящем режиме возможны задержки.</string>
+    <string name="settings_continuous_error">Не удалось запустить мониторинг. Проверьте разрешение на уведомления.</string>
+    <string name="settings_background_title">Фоновые измерения</string>
+    <string name="settings_background_desc">Примерно каждые 15 минут плюс запуск при подключении зарядки. Android может задерживать задачи; виджет обновляется отдельно.</string>
+    <string name="settings_background_error">Не удалось включить фоновые измерения.</string>
+
+    <string name="settings_group_alerts">Оповещения</string>
+    <string name="settings_notifications_blocked_title">Уведомления отключены</string>
+    <string name="settings_notifications_blocked_body">Разрешите уведомления в настройках Android, чтобы Voltra могла показывать напоминания и статус мониторинга.</string>
+    <string name="action_notification_settings">Настройки уведомлений</string>
+    <string name="settings_charge_alert_title">Напомнить при %1$d%%</string>
+    <string name="settings_charge_alert_desc">Проверяется во время измерений; фоновое уведомление может задержаться. Зарядка не останавливается.</string>
+    <string name="settings_temp_alert_title">Температура от %1$s</string>
+    <string name="settings_temp_alert_desc">Оповещение при следующем измерении на уровне порога, со сбросом на 2 °C ниже.</string>
+    <string name="settings_low_alert_title">Низкий заряд: %1$d%%</string>
+    <string name="settings_low_alert_desc">Оповещение при разряде; возможно с задержкой между замерами.</string>
+
+    <string name="settings_group_appearance">Оформление и единицы</string>
+    <string name="settings_theme_title">Тема</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="settings_temp_unit_title">Единицы температуры</string>
+
+    <string name="settings_group_history">История и данные</string>
+    <string name="settings_retention_title">Хранить историю: %1$d дней</string>
+    <string name="settings_retention_desc">До 20 000 точек. Увеличение срока не вернёт ранее удалённые данные.</string>
+    <string name="format_days">%1$d дн.</string>
+    <string name="action_clear_history">Очистить все данные</string>
+
+    <string name="settings_group_about">О приложении</string>
+    <string name="about_version">Версия %1$s</string>
+    <string name="about_privacy">Полностью локально и приватно. Без аккаунтов, сети, аналитики и рекламы.</string>
+
+    <!-- Dialogs & snackbars -->
+    <string name="dialog_shorten_retention_title">Сократить срок хранения?</string>
+    <string name="dialog_shorten_retention_body">Измерения старше %1$d дней будут удалены без возможности восстановления. Оценка здоровья и прогнозы могут измениться.</string>
+    <string name="action_delete_old_data">Удалить старые данные</string>
+    <string name="dialog_clear_title">Очистить историю?</string>
+    <string name="dialog_clear_body">Все измерения и заводская ёмкость будут удалены с устройства.</string>
+    <string name="action_delete">Удалить</string>
+    <string name="action_cancel">Отмена</string>
+
+    <string name="msg_design_saved">Заводская ёмкость сохранена</string>
+    <string name="msg_history_cleared">История и заводская ёмкость удалены</string>
+    <string name="msg_retention_updated">Срок хранения обновлён: %1$d дн.</string>
+    <string name="msg_retention_failed">Не удалось обновить срок хранения</string>
+    <string name="msg_export_success">История сохранена в CSV</string>
+    <string name="msg_export_failed">Не удалось сохранить историю</string>
+    <string name="msg_export_empty">Пока нет записей для экспорта</string>
+
+    <!-- Notifications -->
+    <string name="channel_monitor">Мониторинг батареи</string>
+    <string name="channel_charge_alert">Напоминания о зарядке</string>
+    <string name="channel_temp_alert">Температура батареи</string>
+    <string name="channel_low_alert">Низкий заряд</string>
+    <string name="notif_monitor_active">Мониторинг активен</string>
+    <string name="notif_monitor_status">Заряд %1$s%2$s · мониторинг активен</string>
+    <string name="notif_action_stop">Остановить</string>
+    <string name="notif_charge_title">Заряд достиг %1$d%%</string>
+    <string name="notif_charge_body">Можно отключить зарядное устройство. Voltra не управляет зарядкой.</string>
+    <string name="notif_temp_title">Температура батареи: %1$s</string>
+    <string name="notif_temp_body">Датчик достиг установленного порога.</string>
+    <string name="notif_low_title">Низкий заряд: %1$d%%</string>
+    <string name="notif_low_body">Уровень заряда достиг установленного порога.</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Заряд, температура и оценка здоровья батареи</string>
+    <string name="widget_no_data">Нет данных</string>
+    <string name="widget_temp_label">Температура %1$s</string>
+    <string name="widget_health_label">Здоровье %1$d%%</string>
+    <string name="widget_preview_detail">Разряд · 14:30 · Температура 31,4 °C · Здоровье 94%</string>
+</resources>

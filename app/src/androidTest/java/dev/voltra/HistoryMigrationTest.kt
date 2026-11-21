@@ -4,7 +4,10 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -13,15 +16,38 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class HistoryMigrationTest {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
-    @Before fun setup() { context.deleteDatabase("migration-test.db") }
-    @After fun cleanup() { context.deleteDatabase("migration-test.db") }
-    @Test fun storesTransitionsPrunesOldSamplesAndIgnoresLateReaders() {
+
+    @Before
+    fun setup() {
+        context.deleteDatabase("migration-test.db")
+    }
+
+    @After
+    fun cleanup() {
+        context.deleteDatabase("migration-test.db")
+    }
+
+    @Test
+    fun storesTransitionsPrunesOldSamplesAndIgnoresLateReaders() {
         val now = System.currentTimeMillis()
         fun reading(time: Long, level: Int, screenOn: Boolean) = Reading(
-            level = level, charging = false, full = false, plugged = false, screenOn = screenOn,
-            temperature = 30f, voltage = 4000, current = null, averageCurrent = null,
-            energyNwh = null, counter = 1_000_000, status = "ok", source = "battery",
-            chargeMinutes = null, cycles = null, time = time)
+            level = level,
+            charging = false,
+            full = false,
+            plugged = false,
+            screenOn = screenOn,
+            temperature = 30f,
+            voltage = 4000,
+            current = null,
+            averageCurrent = null,
+            energyNwh = null,
+            counter = 1_000_000,
+            status = BatteryHealthStatus.GOOD,
+            source = PowerSource.BATTERY,
+            chargeMinutes = null,
+            cycles = null,
+            time = time,
+        )
         HistoryStore(context, "migration-test.db").use { history ->
             history.record(reading(now - 31L * 24 * 60 * 60_000, 90, true))
             history.record(reading(now, 80, true))
@@ -36,11 +62,28 @@ class HistoryMigrationTest {
             assertTrue(history.observations().isEmpty())
         }
     }
-    @Test fun substantialTemperatureChangesAreRecordedBetweenPeriodicSamples() {
+
+    @Test
+    fun substantialTemperatureChangesAreRecordedBetweenPeriodicSamples() {
         val now = System.currentTimeMillis()
-        fun reading(time: Long, temperature: Float) = Reading(level = 80, charging = false, full = false, plugged = false, screenOn = true,
-            temperature = temperature, voltage = null, current = null, averageCurrent = null, energyNwh = null, counter = null,
-            status = "", source = "", chargeMinutes = null, cycles = null, time = time)
+        fun reading(time: Long, temperature: Float) = Reading(
+            level = 80,
+            charging = false,
+            full = false,
+            plugged = false,
+            screenOn = true,
+            temperature = temperature,
+            voltage = null,
+            current = null,
+            averageCurrent = null,
+            energyNwh = null,
+            counter = null,
+            status = BatteryHealthStatus.UNKNOWN,
+            source = PowerSource.BATTERY,
+            chargeMinutes = null,
+            cycles = null,
+            time = time,
+        )
         HistoryStore(context, "migration-test.db").use { history ->
             history.record(reading(now, 30f))
             history.record(reading(now + 1000, 31f))
@@ -48,7 +91,9 @@ class HistoryMigrationTest {
             assertEquals(listOf(30f, 32f), history.observations().map { it.temperature })
         }
     }
-    @Test fun historyIsBoundedBySampleCount() {
+
+    @Test
+    fun historyIsBoundedBySampleCount() {
         val now = System.currentTimeMillis()
         HistoryStore(context, "migration-test.db").use { history ->
             val db = history.writableDatabase
@@ -61,17 +106,39 @@ class HistoryMigrationTest {
                 }
                 statement.close()
                 db.setTransactionSuccessful()
-            } finally { db.endTransaction() }
-            val reading = Reading(level = 79, charging = false, full = false, plugged = false, screenOn = true,
-                temperature = null, voltage = null, current = null, averageCurrent = null, energyNwh = null, counter = null,
-                status = "", source = "", chargeMinutes = null, cycles = null, time = now)
+            } finally {
+                db.endTransaction()
+            }
+            val reading = Reading(
+                level = 79,
+                charging = false,
+                full = false,
+                plugged = false,
+                screenOn = true,
+                temperature = null,
+                voltage = null,
+                current = null,
+                averageCurrent = null,
+                energyNwh = null,
+                counter = null,
+                status = BatteryHealthStatus.UNKNOWN,
+                source = PowerSource.BATTERY,
+                chargeMinutes = null,
+                cycles = null,
+                time = now,
+            )
             history.record(reading)
-            val count = db.rawQuery("SELECT COUNT(*) FROM samples", null).use { cursor -> cursor.moveToFirst(); cursor.getInt(0) }
+            val count = db.rawQuery("SELECT COUNT(*) FROM samples", null).use { cursor ->
+                cursor.moveToFirst()
+                cursor.getInt(0)
+            }
             assertEquals(20_000, count)
             assertEquals(20_000, history.observations().size)
         }
     }
-    @Test fun sampleCountCapUsesInsertionOrderAfterClockRollback() {
+
+    @Test
+    fun sampleCountCapUsesInsertionOrderAfterClockRollback() {
         val now = System.currentTimeMillis()
         HistoryStore(context, "migration-test.db").use { history ->
             val db = history.writableDatabase
@@ -85,21 +152,57 @@ class HistoryMigrationTest {
                 }
                 statement.close()
                 db.setTransactionSuccessful()
-            } finally { db.endTransaction() }
-            history.record(Reading(level = 79, charging = false, full = false, plugged = false, screenOn = true,
-                temperature = null, voltage = null, current = null, averageCurrent = null, energyNwh = null, counter = null,
-                status = "", source = "", chargeMinutes = null, cycles = null, time = now - 24 * 60 * 60_000L + 10_000L))
+            } finally {
+                db.endTransaction()
+            }
+            history.record(
+                Reading(
+                    level = 79,
+                    charging = false,
+                    full = false,
+                    plugged = false,
+                    screenOn = true,
+                    temperature = null,
+                    voltage = null,
+                    current = null,
+                    averageCurrent = null,
+                    energyNwh = null,
+                    counter = null,
+                    status = BatteryHealthStatus.UNKNOWN,
+                    source = PowerSource.BATTERY,
+                    chargeMinutes = null,
+                    cycles = null,
+                    time = now - 24 * 60 * 60_000L + 10_000L,
+                ),
+            )
             val points = history.observations()
             assertEquals(20_000, points.size)
             assertEquals(now - (20_000 - 11) * 1000L, points.first().time)
             assertEquals(79, points.last().level)
         }
     }
-    @Test fun largeClockRollbackPreservesExistingSamplesAndSplitsSessions() {
+
+    @Test
+    fun largeClockRollbackPreservesExistingSamplesAndSplitsSessions() {
         val now = System.currentTimeMillis()
-        fun reading(time: Long, level: Int) = Reading(level = level, charging = false, full = false, plugged = false, screenOn = true,
-            temperature = null, voltage = null, current = null, averageCurrent = null, energyNwh = null, counter = null,
-            status = "", source = "", chargeMinutes = null, cycles = null, time = time)
+        fun reading(time: Long, level: Int) = Reading(
+            level = level,
+            charging = false,
+            full = false,
+            plugged = false,
+            screenOn = true,
+            temperature = null,
+            voltage = null,
+            current = null,
+            averageCurrent = null,
+            energyNwh = null,
+            counter = null,
+            status = BatteryHealthStatus.UNKNOWN,
+            source = PowerSource.BATTERY,
+            chargeMinutes = null,
+            cycles = null,
+            time = time,
+        )
         HistoryStore(context, "migration-test.db").use { history ->
             history.record(reading(now, 80))
             history.record(reading(now - 5 * 60_000, 79))
@@ -108,7 +211,9 @@ class HistoryMigrationTest {
             assertEquals(2, Sessions.group(points).size)
         }
     }
-    @Test fun retentionSettingPrunesTransactionallyAndPersists() {
+
+    @Test
+    fun retentionSettingPrunesTransactionallyAndPersists() {
         val now = System.currentTimeMillis()
         val day = 24 * 60 * 60_000L
         HistoryStore(context, "migration-test.db").use { history ->
@@ -125,16 +230,35 @@ class HistoryMigrationTest {
         }
         HistoryStore(context, "migration-test.db").use { history -> assertEquals(7, history.retentionDays()) }
     }
-    @Test fun retentionChangesAreSeenByIndependentBackgroundStore() {
+
+    @Test
+    fun retentionChangesAreSeenByIndependentBackgroundStore() {
         val now = System.currentTimeMillis()
         val day = 24 * 60 * 60_000L
         HistoryStore(context, "migration-test.db").use { settings ->
             settings.setRetentionDays(90, now)
             settings.writableDatabase.execSQL("INSERT INTO samples(time,level,plugged,charging) VALUES (?, 80, 0, 0)", arrayOf<Any>(now - 60 * day))
             HistoryStore(context, "migration-test.db").use { worker ->
-                worker.record(Reading(level = 79, charging = false, full = false, plugged = false, screenOn = true,
-                    temperature = null, voltage = null, current = null, averageCurrent = null, energyNwh = null, counter = null,
-                    status = "", source = "", chargeMinutes = null, cycles = null, time = now))
+                worker.record(
+                    Reading(
+                        level = 79,
+                        charging = false,
+                        full = false,
+                        plugged = false,
+                        screenOn = true,
+                        temperature = null,
+                        voltage = null,
+                        current = null,
+                        averageCurrent = null,
+                        energyNwh = null,
+                        counter = null,
+                        status = BatteryHealthStatus.UNKNOWN,
+                        source = PowerSource.BATTERY,
+                        chargeMinutes = null,
+                        cycles = null,
+                        time = now,
+                    ),
+                )
                 assertEquals(listOf(80, 79), worker.observations().map { it.level })
                 settings.setRetentionDays(7, now)
                 assertEquals(7, worker.retentionDays())
@@ -142,7 +266,9 @@ class HistoryMigrationTest {
             }
         }
     }
-    @Test fun upgradeFromVersionFiveDefaultsToThirtyDays() {
+
+    @Test
+    fun upgradeFromVersionFiveDefaultsToThirtyDays() {
         val path = context.getDatabasePath("migration-test.db")
         path.parentFile?.mkdirs()
         SQLiteDatabase.openOrCreateDatabase(path, null).use { db ->
@@ -156,7 +282,9 @@ class HistoryMigrationTest {
             assertEquals(6, history.readableDatabase.version)
         }
     }
-    @Test fun upgradeFromVersionFourLeavesNewMeasurementsUnknown() {
+
+    @Test
+    fun upgradeFromVersionFourLeavesNewMeasurementsUnknown() {
         val path = context.getDatabasePath("migration-test.db")
         path.parentFile?.mkdirs()
         SQLiteDatabase.openOrCreateDatabase(path, null).use { db ->
@@ -172,7 +300,9 @@ class HistoryMigrationTest {
             assertEquals(6, history.readableDatabase.version)
         }
     }
-    @Test fun upgradeFromVersionThreePreservesData() {
+
+    @Test
+    fun upgradeFromVersionThreePreservesData() {
         val path = context.getDatabasePath("migration-test.db")
         path.parentFile?.mkdirs()
         SQLiteDatabase.openOrCreateDatabase(path, null).use { db ->
@@ -187,7 +317,9 @@ class HistoryMigrationTest {
             assertEquals(6, history.readableDatabase.version)
         }
     }
-    @Test fun upgradeFromVersionTwoPreservesScreenState() {
+
+    @Test
+    fun upgradeFromVersionTwoPreservesScreenState() {
         val path = context.getDatabasePath("migration-test.db")
         path.parentFile?.mkdirs()
         SQLiteDatabase.openOrCreateDatabase(path, null).use { db ->
@@ -200,7 +332,9 @@ class HistoryMigrationTest {
             assertEquals(6, history.readableDatabase.version)
         }
     }
-    @Test fun upgradeFromVersionOnePreservesSamplesAndUnknownScreenState() {
+
+    @Test
+    fun upgradeFromVersionOnePreservesSamplesAndUnknownScreenState() {
         val path = context.getDatabasePath("migration-test.db")
         path.parentFile?.mkdirs()
         SQLiteDatabase.openOrCreateDatabase(path, null).use { db ->

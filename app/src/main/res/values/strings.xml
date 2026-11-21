@@ -1,1 +1,281 @@
-<resources><string name="widget_description">Заряд, температура и здоровье батареи</string></resources>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Voltra</string>
+    <string name="brand_wordmark" translatable="false">VOLTRA</string>
+    <string name="placeholder_dash" translatable="false">—</string>
+    <string name="live_badge" translatable="false">● LIVE</string>
+    <string name="widget_preview_level" translatable="false">84%</string>
+
+    <!-- Navigation & screen headers -->
+    <string name="nav_overview">Overview</string>
+    <string name="nav_history">History</string>
+    <string name="nav_health">Health</string>
+    <string name="nav_settings">Settings</string>
+    <string name="header_overview">Your Battery</string>
+    <string name="header_history">Battery History</string>
+    <string name="header_health">Battery Health</string>
+    <string name="header_settings">Settings</string>
+    <string name="cd_open_settings">Open settings</string>
+    <string name="cd_dismiss">Dismiss</string>
+
+    <!-- States & domain enums -->
+    <string name="state_charged">Charged</string>
+    <string name="state_charging">Charging</string>
+    <string name="state_plugged">Plugged in</string>
+    <string name="state_on_battery">On battery</string>
+    <string name="state_discharging">Discharging</string>
+
+    <string name="health_good">Good</string>
+    <string name="health_overheat">Overheat</string>
+    <string name="health_cold">Cold</string>
+    <string name="health_dead">Dead</string>
+    <string name="health_over_voltage">Over voltage</string>
+    <string name="health_unspecified_failure">Failure</string>
+    <string name="health_unknown">Unavailable</string>
+
+    <string name="source_ac">AC adapter</string>
+    <string name="source_usb">USB</string>
+    <string name="source_wireless">Wireless</string>
+    <string name="source_dock">Dock</string>
+    <string name="source_other_plugged">Plugged in</string>
+    <string name="source_battery">Battery</string>
+    <string name="source_unknown">Unknown source</string>
+
+    <string name="exclusion_no_counter">No charge counter reported</string>
+    <string name="exclusion_insufficient_span" formatted="false">Needs at least 10% charge rise</string>
+    <string name="exclusion_too_short">Session shorter than 5 minutes</string>
+    <string name="exclusion_too_long">Session longer than 72 hours</string>
+    <string name="exclusion_counter_not_increased">Charge counter did not increase</string>
+    <string name="exclusion_out_of_range">Reading outside valid range</string>
+
+    <!-- Units & formatters -->
+    <string name="unit_ma">mA</string>
+    <string name="unit_celsius" translatable="false">°C</string>
+    <string name="unit_fahrenheit" translatable="false">°F</string>
+    <string name="format_temp_c">%.1f °C</string>
+    <string name="format_temp_f">%.1f °F</string>
+    <string name="format_temp_int_c">%1$d °C</string>
+    <string name="format_temp_int_f">%1$d °F</string>
+    <string name="format_voltage">%.2f V</string>
+    <string name="format_power">%.1f W</string>
+    <string name="format_energy">%.2f Wh</string>
+    <string name="format_current_zero">0 mA</string>
+    <string name="format_current_small">%+.1f mA</string>
+    <string name="format_current_large">%1$s%2$d mA</string>
+    <string name="format_mah">%1$d mAh</string>
+    <string name="format_percent">%1$d%%</string>
+    <string name="format_speed">%.1f%%/h</string>
+    <string name="format_duration_hm">%1$d h %2$d min</string>
+    <string name="format_estimate_over_week">7 days or more</string>
+
+    <!-- First-run setup card -->
+    <string name="setup_card_title">Set up Voltra</string>
+    <string name="setup_card_body">Add your phone\'s rated design capacity to estimate battery health, and turn on background sampling to build session history automatically.</string>
+    <string name="setup_card_action">Open settings</string>
+
+    <!-- Overview screen -->
+    <string name="label_right_now">RIGHT NOW</string>
+    <string name="label_charge">CHARGE</string>
+    <string name="cd_charge_gauge">Battery level %1$s, %2$s</string>
+    <string name="label_until_full">TIME TO FULL</string>
+    <string name="label_estimated_remaining">ESTIMATED REMAINING</string>
+    <string name="estimate_not_enough_data">Not enough data yet</string>
+    <string name="estimate_source_discharge">Based on recent measured discharge sessions</string>
+    <string name="estimate_source_android">Android system estimate</string>
+    <string name="estimate_source_linear">Linear from current session; does not predict taper or charge limits</string>
+    <string name="estimate_source_android_unavailable">Android has not reported an estimate yet</string>
+
+    <string name="section_metrics">Readings</string>
+    <string name="section_metrics_sub">From device</string>
+    <string name="metric_temperature">Temperature</string>
+    <string name="metric_temperature_hint">Thermal sensor</string>
+    <string name="metric_voltage">Voltage</string>
+    <string name="metric_voltage_hint">Current</string>
+    <string name="metric_current">Current</string>
+    <string name="metric_current_hint">Device sign</string>
+    <string name="metric_condition">Condition</string>
+    <string name="metric_condition_hint">Reported by Android</string>
+    <string name="metric_power">Power</string>
+    <string name="metric_power_hint">Battery-side est.</string>
+    <string name="metric_source">Source</string>
+    <string name="metric_source_hint">Connection type</string>
+    <string name="metric_avg_current">Avg current</string>
+    <string name="metric_avg_current_hint">System average</string>
+    <string name="metric_energy">Energy</string>
+    <string name="metric_energy_hint">Remaining</string>
+    <string name="note_power_and_forecast">Power is calculated from battery current and voltage, not wall adapter output. Discharge forecasts appear after at least 10 minutes and a 2%% drop in a measured session and depend on active usage.</string>
+
+    <string name="section_current_session">Current session</string>
+    <string name="label_since_observed">SINCE OBSERVATION STARTED</string>
+    <string name="session_started_meta">Started %1$s · %2$d samples</string>
+
+    <string name="label_data_collection">DATA COLLECTION</string>
+    <string name="collection_continuous">Continuous monitoring</string>
+    <string name="collection_background">Background sampling</string>
+    <string name="collection_foreground_only">While app is open</string>
+    <string name="collection_last_sample">Last sample: %1$s</string>
+    <string name="collection_no_samples">No samples recorded yet</string>
+    <string name="action_configure">Configure</string>
+
+    <string name="section_screen_forecast">Screen-state forecast</string>
+    <string name="section_approx">Approximate</string>
+    <string name="metric_screen_on">Screen on</string>
+    <string name="metric_screen_off">Screen off</string>
+    <string name="metric_from_samples">From samples</string>
+    <string name="note_screen_interactivity">Uses Android device interactivity at sample endpoints. The screen may toggle between readings, and interactivity can differ from the physical display state.</string>
+
+    <!-- Health screen -->
+    <string name="label_capacity_estimate">CAPACITY ESTIMATE</string>
+    <string name="health_of_design_capacity">of design capacity</string>
+    <string name="health_summary_detail">Qualifying charges: %1$d. Charge-span-weighted median of the last 10 sessions. Charge-counter estimates may differ from true cell capacity.</string>
+    <string name="health_over_100_warning">Estimate is above 100%%: double-check your design capacity and measure again.</string>
+    <string name="metric_cycles">Cycles</string>
+    <string name="metric_wear">Estimated loss</string>
+    <string name="metric_approximate">Approximate</string>
+    <string name="charge_counter_line">Charge counter: %1$s</string>
+    <string name="charge_counter_unsupported">not supported</string>
+    <string name="section_details">Details</string>
+    <string name="section_estimate">Estimate</string>
+    <string name="metric_measured">Measured</string>
+    <string name="metric_capacity_hint">Capacity</string>
+    <string name="metric_design">Design</string>
+    <string name="metric_from_settings">From settings</string>
+    <string name="label_capacity_history">CAPACITY HISTORY</string>
+    <string name="capacity_chart_empty">Chart appears after two qualifying charging sessions.</string>
+    <string name="capacity_chart_range">Range: %1$d–%2$d mAh · %3$d sessions</string>
+    <string name="cd_capacity_chart">Capacity estimate history across %1$d sessions, latest %2$d mAh</string>
+    <string name="health_howto_title">How to get an estimate</string>
+    <string name="health_howto_body">1. Enter your phone\'s rated design capacity in Settings.\n\n2. Charge by at least 10%% over 5 minutes or more while Voltra collects samples.\n\n3. If your device exposes a charge counter, the estimate will appear here.</string>
+    <string name="action_set_design_capacity">Set design capacity →</string>
+    <string name="section_device">Device</string>
+    <string name="section_android" translatable="false">Android</string>
+    <string name="detail_model">Model</string>
+    <string name="detail_android_version">Android version</string>
+    <string name="detail_chemistry">Battery chemistry</string>
+    <string name="detail_system_status">Android battery status</string>
+    <string name="note_health_caveat">Android\'s system battery status and estimated remaining capacity are separate metrics. Enable background sampling in Settings to capture more sessions.</string>
+
+    <!-- History screen & chart -->
+    <string name="chart_title_level">CHARGE</string>
+    <string name="chart_label_level">Charge</string>
+    <string name="chart_title_temp">TEMPERATURE</string>
+    <string name="chart_label_temp">Temp</string>
+    <string name="chart_title_current">CURRENT</string>
+    <string name="chart_label_current">Current</string>
+    <string name="chart_title_voltage">VOLTAGE</string>
+    <string name="chart_label_voltage">Voltage</string>
+    <string name="range_24h">24h</string>
+    <string name="range_7d">7d</string>
+    <string name="range_30d">30d</string>
+    <string name="chart_empty">Chart appears after a few recorded samples.</string>
+    <string name="chart_scale_meta">Range %1$s–%2$s · latest %3$s</string>
+    <string name="chart_scrub_hint">Touch or drag chart to inspect values</string>
+    <string name="chart_current_calibration_note">Stored with the current calibration active at measurement time.</string>
+    <string name="cd_history_chart">%1$s over %2$d days, range %3$s to %4$s, latest %5$s</string>
+
+    <string name="section_speed">Average rate</string>
+    <string name="section_speed_sub">From stored sessions</string>
+    <string name="metric_avg_hint">Average</string>
+    <string name="section_screen_24h">Screen time</string>
+    <string name="section_screen_24h_sub">Observed in last 24h</string>
+    <string name="screen_on_short">On</string>
+    <string name="screen_off_short">Off</string>
+    <string name="note_observed_screen_24h">Android interactivity is checked only at sample boundaries. Transitions and gaps between samples can affect totals.</string>
+    <string name="section_by_source">By power source</string>
+    <string name="note_source_speeds">Average rate across observed sessions; varies with charge level and device load.</string>
+    <string name="section_sessions">Sessions</string>
+    <string name="section_sessions_sub">Up to %1$d days</string>
+    <string name="sessions_empty">Charging and discharging sessions will appear after a few samples.</string>
+    <string name="session_meta_line">%1$s · %2$s · %3$d samples</string>
+    <string name="session_counter_delta">Δ counter %1$s%2$d mAh</string>
+    <string name="session_peak_temp">peak %1$s</string>
+    <string name="session_capacity_est">Capacity estimate: %1$d mAh</string>
+    <string name="session_capacity_excluded">Excluded from health: %1$s</string>
+    <string name="action_show_more_sessions">Show more · %1$d remaining</string>
+    <string name="action_export_csv">Export history CSV</string>
+    <string name="note_history_retention">History keeps up to %1$d days and 20,000 samples. Gaps longer than 75 minutes start a new session. Background sampling is best-effort and may be delayed by Android.</string>
+
+    <!-- Settings screen -->
+    <string name="settings_group_battery">Battery &amp; Calibration</string>
+    <string name="settings_design_label">Design capacity (mAh)</string>
+    <string name="settings_design_helper">Enter the manufacturer\'s rated battery capacity (500–50,000 mAh) to estimate remaining health.</string>
+    <string name="settings_design_error">Enter a value between 500 and 50,000 mAh</string>
+    <string name="action_save">Save</string>
+    <string name="settings_multiplier_title">Current calibration: ×%1$d</string>
+    <string name="settings_multiplier_desc">Change only if your device reports current in non-standard units. Also affects computed power.</string>
+
+    <string name="settings_group_monitoring">Monitoring</string>
+    <string name="settings_continuous_title">Continuous monitoring</string>
+    <string name="settings_continuous_desc">Samples roughly every 30 seconds with an ongoing notification and higher battery usage. Android may still delay updates during deep sleep.</string>
+    <string name="settings_continuous_error">Could not start monitoring. Check notification permission.</string>
+    <string name="settings_background_title">Background sampling</string>
+    <string name="settings_background_desc">Periodic samples roughly every 15 minutes plus a charging trigger. Android may defer jobs; the home-screen widget updates separately.</string>
+    <string name="settings_background_error">Could not schedule background sampling.</string>
+
+    <string name="settings_group_alerts">Alerts</string>
+    <string name="settings_notifications_blocked_title">Notifications are blocked</string>
+    <string name="settings_notifications_blocked_body">Allow notifications in Android settings so Voltra can deliver battery reminders and monitoring status.</string>
+    <string name="action_notification_settings">Notification settings</string>
+    <string name="settings_charge_alert_title">Charge reminder at %1$d%%</string>
+    <string name="settings_charge_alert_desc">Checked when samples are taken; background alerts may be delayed. Voltra does not stop charging.</string>
+    <string name="settings_temp_alert_title">Temperature alert at %1$s</string>
+    <string name="settings_temp_alert_desc">Notifies on the next reading reaching the threshold, with 2 °C reset hysteresis.</string>
+    <string name="settings_low_alert_title">Low battery alert at %1$d%%</string>
+    <string name="settings_low_alert_desc">Notifies while discharging; subject to sampling intervals.</string>
+
+    <string name="settings_group_appearance">Appearance &amp; Units</string>
+    <string name="settings_theme_title">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="settings_temp_unit_title">Temperature unit</string>
+
+    <string name="settings_group_history">History &amp; Data</string>
+    <string name="settings_retention_title">Keep history: %1$d days</string>
+    <string name="settings_retention_desc">Up to 20,000 samples. Extending retention cannot restore previously pruned data.</string>
+    <string name="format_days">%1$d days</string>
+    <string name="action_clear_history">Clear all data</string>
+
+    <string name="settings_group_about">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_privacy">100%% offline and private. No accounts, network access, analytics, or ads.</string>
+
+    <!-- Dialogs & snackbars -->
+    <string name="dialog_shorten_retention_title">Shorten history retention?</string>
+    <string name="dialog_shorten_retention_body">Samples older than %1$d days will be permanently deleted. Health estimates and forecasts may change.</string>
+    <string name="action_delete_old_data">Delete old data</string>
+    <string name="dialog_clear_title">Clear all history?</string>
+    <string name="dialog_clear_body">All recorded battery samples and your saved design capacity will be removed from this device.</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+
+    <string name="msg_design_saved">Design capacity saved</string>
+    <string name="msg_history_cleared">History and design capacity cleared</string>
+    <string name="msg_retention_updated">History retention updated to %1$d days</string>
+    <string name="msg_retention_failed">Failed to update retention period</string>
+    <string name="msg_export_success">History exported to CSV</string>
+    <string name="msg_export_failed">Failed to export history</string>
+    <string name="msg_export_empty">No recorded history to export yet</string>
+
+    <!-- Notifications -->
+    <string name="channel_monitor">Battery monitoring</string>
+    <string name="channel_charge_alert">Charge reminders</string>
+    <string name="channel_temp_alert">Battery temperature</string>
+    <string name="channel_low_alert">Low battery</string>
+    <string name="notif_monitor_active">Monitoring active</string>
+    <string name="notif_monitor_status">Charge %1$s%2$s · monitoring active</string>
+    <string name="notif_action_stop">Stop</string>
+    <string name="notif_charge_title">Battery reached %1$d%%</string>
+    <string name="notif_charge_body">You can unplug the charger. Voltra does not control charging.</string>
+    <string name="notif_temp_title">Battery temperature: %1$s</string>
+    <string name="notif_temp_body">The battery sensor reached your configured threshold.</string>
+    <string name="notif_low_title">Low battery: %1$d%%</string>
+    <string name="notif_low_body">Battery level reached your configured threshold.</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Battery charge, temperature, and estimated health</string>
+    <string name="widget_no_data">No data yet</string>
+    <string name="widget_temp_label">Temp %1$s</string>
+    <string name="widget_health_label">Health %1$d%%</string>
+    <string name="widget_preview_detail">Discharging · 14:30 · Temp 31.4 °C · Health 94%</string>
+</resources>
