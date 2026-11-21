@@ -1,0 +1,10 @@
+Voltra is a private, 100% offline Android battery companion built with Kotlin and Jetpack Compose. It tracks live battery telemetry, records local charging and discharging sessions, and estimates remaining battery capacity without accounts, network access, analytics, or ads.
+
+Key features:
+• Live readings: charge level, temperature (°C or °F), voltage, instantaneous and average current, battery-side power estimate, remaining energy, Android battery status, and system cycle count where available.
+• Capacity & health estimation: charge-span-weighted median across qualifying charging sessions using your device's charge counter, with clear reasons whenever a session is excluded.
+• Interactive history: 24-hour, 7-day, and 30-day charts for charge, temperature, current, and voltage with touch scrubbing, per-source charging speeds, session list, configurable 7/30/90-day retention, and dated CSV export.
+• Opt-in monitoring: best-effort periodic and charging-triggered background sampling, or optional continuous foreground monitoring with a visible notification and one-tap stop.
+• Alerts: charge-level reminder (60–100%), high-temperature alert (35–50 °C with hysteresis), and low-battery alert (5–30%).
+• Home-screen widget: quick view of charge level, state, observation time, temperature, and estimated health.
+• Honest & private: zero internet permissions, no hidden background tricks, and clear labels separating observed sensor data from estimates.

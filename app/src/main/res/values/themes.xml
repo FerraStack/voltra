@@ -1,8 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Voltra" parent="android:style/Theme.Material.NoActionBar">
-        <item name="android:windowBackground">#101713</item>
-        <item name="android:statusBarColor">#101713</item>
-        <item name="android:navigationBarColor">#101713</item>
-        <item name="android:windowLightStatusBar">false</item>
+    <style name="Theme.Voltra" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#F4F7F3</item>
     </style>
 </resources>

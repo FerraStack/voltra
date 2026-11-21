@@ -1,26 +1,66 @@
 # Voltra
 
-Voltra is a private, on-device Android battery companion built with Kotlin and Jetpack Compose. The app is an early prototype; see [research and limitations](docs/RESEARCH.md).
+[![Android CI](https://github.com/FerraStack/voltra/actions/workflows/android.yml/badge.svg)](https://github.com/FerraStack/voltra/actions/workflows/android.yml)
+[![Release](https://github.com/FerraStack/voltra/actions/workflows/release.yml/badge.svg)](https://github.com/FerraStack/voltra/actions/workflows/release.yml)
+
+Voltra is a private, 100% offline Android battery companion built with Kotlin and Jetpack Compose. It records local battery telemetry, separates charging and discharging sessions, estimates remaining battery capacity from observed charge-counter spans, and stays honest about what Android sensors can and cannot measure.
+
+## Download
+
+Download the latest signed APK and `SHA256SUMS` from [GitHub Releases](https://github.com/FerraStack/voltra/releases).
 
 ## Features
 
-- Live charge, system battery condition, temperature, voltage and current where exposed by the device. Optional manual current-unit calibration affects current and calculated power. Android's charge-time and cycle-count estimates are shown when available.
-- Local history with 24-hour and seven-day charge, temperature, current and voltage graphs, charging/discharging sessions with incremental loading, source-specific average charging speeds where observed, and CSV export. History is bounded to 20,000 samples and a configurable 7, 30 (default), or 90 days. Shortening the period requires confirmation and immediately removes older samples; increasing it cannot restore deleted data. Older samples are also pruned when a new sample is saved. Snapshots are stored at most every five minutes unless the level, power connection, charging state or screen state changes, or the temperature differs by at least 2 °C from the last stored point; monitoring and alert checks may run more often.
-- Optional user-started continuous monitoring with an ongoing notification and samples approximately every 30 seconds. While running it also samples screen on/off events and rate-limited battery-change broadcasts. It uses no wake lock, so Android can delay it while asleep or stop it. It consumes additional power and can be stopped from its notification.
-- Optional best-effort background sampling, approximately every 15 minutes and on power connection changes. Android may delay or skip jobs; gaps longer than 75 minutes split sessions. Turn it on in settings. This mode does not need a persistent service or exemption from battery optimization.
-- Charge time from Android where available, or a rough linear estimate from the current charging session; it cannot predict charging taper or charge limits.
-- A time-weighted discharge estimate based on up to five observed sessions with at least 10 minutes and a 2% drop. Separate screen-on/off estimates and observed-time summaries use Android device interactivity at interval endpoints; interactivity can differ from the actual display state and transitions between samples can be missed.
-- An estimated capacity based on a charge-span-weighted median of up to ten charging sessions with a 10% rise over at least five minutes and a supported charge counter. Enter the manufacturer's design capacity to display a health percentage. This is an estimate, not a diagnostic measurement; phone sensors and multi-cell designs can affect accuracy. Android's battery health status is a separate system status.
-- Home-screen widget showing the last battery level, charge state and observation time. The same detail line also shows temperature in °C when the reading has one, and estimated health when design capacity is set and a capacity estimate exists. Health is omitted otherwise. The widget does not show a wear score. Android schedules widget updates roughly every 30 minutes; adding it creates periodic observations even when background sampling is off.
-- Optional low-battery reminder with a configurable threshold, subject to sampling delays.
-- Optional high-temperature reminder with a configurable 35–50 °C threshold and 2 °C reset hysteresis, subject to sampling delays.
-- Optional charge-level reminder from 60% to 100%; it can be delayed between samples and does not stop charging. Notification permission is requested only when enabled.
-- Data and design capacity can be cleared in settings. No account, network access, analytics or advertising.
+- **Live battery telemetry**: Charge level, Android system battery condition, temperature (°C or °F), voltage, instantaneous and average current, remaining energy (Wh), battery-side power estimate, plus system charge-time and cycle-count estimates where exposed by the device. Includes optional manual current-unit calibration (`×1`–`×1000`).
+- **Interactive local history**: 24-hour, 7-day, and 30-day charts for charge, temperature, current, and voltage with touch/drag scrubbing, Y/X axis labels, charging/discharging session breakdowns, per-source average charging speeds, and dated CSV export (`voltra-history-YYYY-MM-DD.csv`).
+- **Bounded SQLite storage**: WAL-mode local database keeping up to 20,000 samples across a configurable 7, 30 (default), or 90 days. Shortening retention requires confirmation and prunes immediately; forward clock jumps over 365 days do not wipe historical samples.
+- **Estimated capacity & health**: Charge-span-weighted median across up to 10 qualifying charging sessions (≥ 10% gain over ≥ 5 minutes with an increasing charge counter). Enter your phone's rated design capacity to display an estimated health percentage, with clear reasons when a session is excluded.
+- **Opt-in background sampling**: Periodic `JobScheduler` sampling approximately every 15 minutes plus a charging-constraint job (`setRequiresCharging(true)`) so Android 8+ triggers sampling when charging starts without relying on blocked implicit broadcasts. Android may delay or batch jobs; gaps over 75 minutes start a new session.
+- **Opt-in continuous monitoring**: Explicit foreground service (`specialUse`) with an ongoing notification sampling roughly every 30 seconds plus immediate power-connection and screen-state events, with no wake lock and a one-tap Stop action.
+- **Configurable alerts**: Charge-level reminder (60–100%), high-temperature alert (35–50 °C with 2 °C reset hysteresis), and low-battery alert (5–30% with 3% reset hysteresis). Voltra never controls charging hardware.
+- **Home-screen widget**: Resizable widget showing battery level, state, observation time, temperature (°C/°F), and cached health estimate when available.
+- **Bilingual & adaptive UI**: Full English and Russian localization (including Android 13+ per-app language support), System/Dark/Light Material 3 themes, edge-to-edge layout, and adaptive phone/tablet navigation (`NavigationBar` / `NavigationRail`).
 
-The first measurements can take time. Charge counter, current, system charge time and cycle count are not available on every device. Background sampling is inexact and cannot reliably support timely alarms.
+## Permissions
+
+Voltra requests no network permission (`INTERNET` is not declared) and collects zero analytics or telemetry. See [PRIVACY.md](PRIVACY.md).
+
+| Permission | Purpose | Opt-in / Behavior |
+| --- | --- | --- |
+| `POST_NOTIFICATIONS` | Charge, temperature, and low-battery reminders, plus ongoing continuous monitoring notification | Requested only when you enable an alert or continuous monitoring (Android 13+) |
+| `FOREGROUND_SERVICE` & `FOREGROUND_SERVICE_SPECIAL_USE` | Optional user-started continuous monitoring with a visible notification | Off by default; stopped anytime from Settings or the notification |
+| `RECEIVE_BOOT_COMPLETED` | Persisting scheduled `JobScheduler` background sampling across reboots | Active only when background sampling is enabled in Settings |
+
+## CSV Export Format
+
+Exported files are named `voltra-history-YYYY-MM-DD.csv` with the following columns:
+
+| Column | Description |
+| --- | --- |
+| `timestamp_ms` | Sample timestamp in Unix milliseconds |
+| `level_percent` | Battery level (`0`–`100`) |
+| `plugged` | `true` if connected to external power |
+| `charging` | `true` if actively charging |
+| `charge_counter_uAh` | Device-reported charge counter in microampere-hours (empty if unavailable) |
+| `temperature_c` | Battery temperature in degrees Celsius (always °C regardless of display unit) |
+| `device_interactive` | Android `PowerManager.isInteractive` state at sample time |
+| `plug_type` | Android raw plug type (`0` battery, `1` AC, `2` USB, `4` wireless, `8` dock) |
+| `current_ua` | Calibrated current in microamperes as stored at measurement time |
+| `voltage_mv` | Battery voltage in millivolts |
 
 ## Build
 
-Install Android SDK 36.1 and JDK 17 or newer, then run `./gradlew :app:assembleDebug :app:testDebugUnitTest`. The debug APK is in `app/build/outputs/apk/debug/`. With a device or emulator connected, run `./gradlew :app:connectedDebugAndroidTest` for database migration and retention tests. See [CONTRIBUTING.md](CONTRIBUTING.md) for development notes.
+Requires Android SDK 36.1 and JDK 17+.
 
-CSV timestamps are Unix milliseconds. `charge_counter_uAh` is the device-reported charge counter, `temperature_c` is degrees Celsius, `current_ua` is calibrated current in microamperes as stored at the time of measurement, `voltage_mv` is millivolts, `device_interactive` is Android device interactivity, and `plug_type` is Android’s raw power-source value (0 unplugged, 1 AC, 2 USB, 4 wireless, 8 dock). Empty fields mean unavailable or not recorded by an older version.
+```sh
+# Run unit tests, lint, and build debug + AndroidTest APKs
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+
+# Build an R8-minified release APK locally using the debug signing key
+./gradlew :app:assembleRelease -Pvoltra.signReleaseWithDebugKey=true
+
+# Run instrumented SQLite migration tests on a connected device or emulator
+./gradlew :app:connectedDebugAndroidTest
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md), [docs/RESEARCH.md](docs/RESEARCH.md), [docs/ROADMAP.md](docs/ROADMAP.md), and [docs/RELEASING.md](docs/RELEASING.md).

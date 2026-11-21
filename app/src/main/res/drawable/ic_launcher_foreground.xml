@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Clean geometric Voltra bolt centered inside the 66dp safe zone (21..87) -->
+    <path
+        android:fillColor="#BCF36B"
+        android:pathData="M58.5,27L38,57.5h13.5L48.5,81L70,49.5H56.5L58.5,27z" />
+    <path
+        android:fillColor="#E1FBA9"
+        android:pathData="M58.5,27L47.5,52.5h5.2L58.5,27z" />
+</vector>

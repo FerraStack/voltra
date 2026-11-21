@@ -1,22 +1,23 @@
 # Roadmap
 
-The [research](RESEARCH.md) describes the source material and important limitations. This is a prototype, not a calibrated diagnostic tool.
+See [RESEARCH.md](RESEARCH.md) for source material and measurement caveats. Voltra is an honest, privacy-first battery companion—not a calibrated laboratory diagnostic instrument.
 
-## Available
+## Shipped in v1.0.0
 
-- Current device-provided battery values, approximate battery-side power, system charge-time and cycle count where available.
-- Bounded local sample history, charge/discharge sessions, chart, CSV export, configurable retention and explanations for excluded capacity estimates.
-- Estimated remaining capacity and health based on a charge-span-weighted median of qualifying charge sessions, design capacity entered by the user; estimated discharge time and approximate screen-state subsets.
-- Opt-in periodic sampling and opt-in foreground monitoring, charge and temperature notifications, home-screen widget with temperature and estimated health when available.
-- No network permissions, account, telemetry or ads.
+- Live device-reported battery metrics (charge, temperature in °C/°F, voltage, current, average current, remaining energy, battery-side power estimate, system charge-time, and cycle count where exposed).
+- Bounded WAL-mode SQLite history (up to 20,000 samples across 7, 30, or 90 days) with clock rollback preservation, > 365-day forward-jump pruning guard, and schema v1–v6 migrations.
+- Interactive 24h / 7d / 30d history charts with Y/X axis labels and touch/drag scrubbing, session history with incremental loading, per-source average charging speeds, and dated CSV export (`voltra-history-YYYY-MM-DD.csv`).
+- Capacity & health estimation via charge-span-weighted median across up to 10 qualifying charge sessions, cached for fast sampling and widget refreshes, with typed exclusion explanations.
+- Opt-in periodic + charging-constraint `JobScheduler` background sampling and hardened `specialUse` foreground monitoring service with safe broadcast Stop action.
+- Charge-level, high-temperature (2 °C hysteresis), and low-battery (3% hysteresis) alerts with custom monochrome notification icons.
+- Resizable home-screen widget with Android 12+ rounded corners, preview layout, and localized formatting.
+- Full English and Russian localization (`locales_config.xml`), System/Dark/Light Material 3 themes, edge-to-edge insets, and adaptive phone/tablet navigation (`NavigationBar` / `NavigationRail`).
+- R8 shrinking and automated signed release builds with APK/AAB verification and `SHA256SUMS`.
 
-## Next
+## Next (Post-1.0)
 
-- Validate readings and estimates on real devices from multiple vendors, including dual-cell batteries, fast charging, charging limits, sensor dropout, reboots and battery optimization. Compare with external instruments; record known limitations per device.
-- Extend the existing instrumented database migration and sampling tests to cover background/foreground lifecycle, notifications and CSV export. Extend coverage of large forward clock changes and timezone changes. Clock rollback already preserves previous samples and splits sessions.
-- Introduce session quality/confidence based on tested device behavior and multiple independent measurements. Explore counter drift and discontinuities; avoid inventing precision or a scientifically unvalidated wear score.
-- Improve screen-on/off coverage without claiming transitions were observed when they weren't; test screen events during a user-enabled foreground session and measure missed events.
-- Consider a separate opt-in usage-access flow for app foreground activity. Any per-app power attribution must be labeled as an estimate and should not imply access to measured per-app electrical consumption.
-- Add accessible chart descriptions, larger font and small-screen testing, translations, and a richer tablet layout.
-- Consider safe backup/import and richer export, and more notification thresholds.
-- Evaluate foreground service eligibility and Play policy before a Play release. The `specialUse` subtype is reviewed by Google and monitoring behavior needs a clear disclosure.
+- **Multi-vendor hardware validation**: Validate charge-counter behavior, dual-cell batteries, fast-charging taper, and OEM power restrictions across a wider matrix of physical devices and document device-specific quirks.
+- **Session confidence indicators**: Explore empirical confidence ranges based on sample density and variance across multiple independent charging sessions without inventing unverified wear scores.
+- **Local backup & import**: Support explicit user-initiated encrypted or plain SQLite/CSV import so users can migrate history when switching devices without cloud backup.
+- **Optional per-app usage attribution**: Evaluate a strictly opt-in `PACKAGE_USAGE_STATS` flow that clearly labels foreground time vs. estimated drain without implying direct per-app electrical measurement.
+- **Additional translations & Play Store readiness**: Expand localization beyond EN/RU and prepare formal `specialUse` foreground service declarations if distributed via Google Play.
